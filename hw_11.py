@@ -45,8 +45,6 @@ class Phone(Field):
         self.__value = value
 
 
-
-
 class Birthday(Field):
     def __init__(self, value=None):
         self.__value = None
@@ -63,11 +61,18 @@ class Birthday(Field):
             self.__value = datetime.strptime(value, '%d-%m-%Y')
         except ValueError:
             raise ValueError('Birthday must be in "dd-mm-yyyy" format')
+<<<<<<< Updated upstream
         
     def replace(self, year):
         if self.__value:
             self.__value = date(
                 self.__value.year, self.__value.month, self.__value.day)
+=======
+    
+    def __str__(self):
+        return self.__value.strftime('%d-%m-%Y')
+    
+>>>>>>> Stashed changes
 
 class Record:
     def __init__(self, name, phone=None, birthday = None):
