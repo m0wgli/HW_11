@@ -53,29 +53,21 @@ class Birthday(Field):
 
     @property
     def value(self):
-        return self.__value.strftime('%d-%m-%Y')
-    
+        return self.__value
+
     @value.setter
     def value(self, value):
         try:
             self.__value = datetime.strptime(value, '%d-%m-%Y')
         except ValueError:
             raise ValueError('Birthday must be in "dd-mm-yyyy" format')
-<<<<<<< Updated upstream
-        
-    def replace(self, year):
-        if self.__value:
-            self.__value = date(
-                self.__value.year, self.__value.month, self.__value.day)
-=======
-    
+
     def __str__(self):
         return self.__value.strftime('%d-%m-%Y')
-    
->>>>>>> Stashed changes
+
 
 class Record:
-    def __init__(self, name, phone=None, birthday = None):
+    def __init__(self, name, phone=None, birthday=None):
         self.name = name
         self.phones = [phone] if phone else None
         self.birthday = birthday
@@ -93,18 +85,19 @@ class Record:
 
     def __str__(self) -> str:
         return f'{str(self.name)} {", ".join([str(p) for p in self.phones])} {str(self.birthday)}'
-    
+
     def set_birthday(self, birthday):
         self.birthday = birthday
 
     def get_birthday(self, birthday):
         return self.birthday.value if self.birthday else None
-    
+
     def days_to_bd(self):
         if not self.birthday:
             return None
         today = date.today()
-        next_birthday = self.birthday.replace(year=today.year)
+        bd = self.birthday.value
+        next_birthday = bd.replace(year=today.year).date()
         if next_birthday and next_birthday < today:
             next_birthday = next_birthday.replace(year=today.year + 1)
             if next_birthday.year - today.year > 1:
@@ -120,8 +113,8 @@ class AddressBook(UserDict):
     def add_record(self, record):
         name = record.name.value
         self.data[name] = record
-    
-    def iterator(self, page =2):
+
+    def iterator(self, page=2):
         while True:
             if self.start_iterate >= len(self.data):
                 break
@@ -130,9 +123,11 @@ class AddressBook(UserDict):
             self.start_iterate += page
 
     def show_all(self):
+        result = []
         for record_batch in self.iterator():
             for record in record_batch:
-                print(record)
+                result.append(str(record))
+        return '\n'.join(result)
 
 
 contacts = AddressBook()
@@ -189,8 +184,8 @@ def add(*args):
     contacts.add_record(record)
     days_to_bd = record.days_to_bd()
     if days_to_bd:
-        print('{days_to_bd} until next birthday')
-    return f"Added <{name.value}> with phone <{phone.value}> and birthday <{birthday.value}>"
+        print(f'{days_to_bd} days until next birthday')
+    return f"Added <{name.value}> with phone <{phone.value}> and birthday <{str(birthday)}>"
 
 
 @input_error
@@ -212,6 +207,14 @@ def change(*args):
     return f'There are no phones with name {name}'
 
 
+def days_to_bd(*args):
+    name = Name(args[0])
+    rec = contacts.get(str(name))
+    if rec:
+        return rec.days_to_bd()
+    return f'There are no contacts with name {name}'
+
+
 COMMANDS = {help: 'help',
             add: 'add',
             exit: ['exit', 'close', 'good bye'],
@@ -219,6 +222,7 @@ COMMANDS = {help: 'help',
             phone: 'phone',
             change: 'change',
             show_all: 'show all',
+            days_to_bd: 'days_to_bd'
             }
 
 
@@ -229,7 +233,7 @@ def command_handler(text):
                 return command, text.replace(kword, '').strip().split()
         elif isinstance(kword, list):
             if text.strip().lower() in kword:
-                return command, None
+                return command, []
     return no_command, None
 
 
